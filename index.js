@@ -1,13 +1,11 @@
 import {
   bytesToHex,
-  GOST_Kuz_Decript,
-  GOST_Kuz_Encript,
+  GOST_Kuz_Decrypt,
+  GOST_Kuz_Encrypt,
   GOST_Kuz_Expand_Key,
   hexToBytes,
 } from "./utils.js";
-import _ from "lodash";
 import fs from "fs/promises";
-import { iterC, iterKey } from "./constants.js";
 
 const key1 = [
   0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00, 0xff, 0xee, 0xdd, 0xcc, 0xbb,
@@ -20,19 +18,12 @@ const key2 = [
 
 async function main() {
   const string = await fs.readFile("input.txt", "binary");
-
   const blk = hexToBytes(string);
-
   GOST_Kuz_Expand_Key(key1, key2);
-
-  console.log(string, "\n", iterC);
-
-  const encriptBlok = GOST_Kuz_Encript(blk);
-
+  console.log(string, "\n");
+  const encriptBlok = GOST_Kuz_Encrypt(blk);
   console.log(bytesToHex(encriptBlok), "\n");
-
-  const decriptBlok = GOST_Kuz_Decript(encriptBlok);
-
+  const decriptBlok = GOST_Kuz_Decrypt(encriptBlok);
   console.log(bytesToHex(decriptBlok));
 }
 

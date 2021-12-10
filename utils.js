@@ -1,14 +1,6 @@
-import fs from "fs";
-
-import {
-  BLOCK_SIZE,
-  iterC,
-  iterKey,
-  lVec,
-  Pi,
-  reversePi,
-} from "./constants.js";
+import { BLOCK_SIZE, lVec, Pi, reversePi } from "./constants.js";
 import _ from "lodash";
+import { loadIterC, loadIterKey, uploadIterC } from "./files-service.js";
 
 // Сложение 2х двоичных векторов по модулю 2
 export function GOST_Kuz_X(a, b) {
@@ -118,8 +110,10 @@ export function GOST_Kuz_reverse_L(inData) {
 }
 
 // функция расчета констант
-function GOST_Kuz_Get_C() {
+async function GOST_Kuz_Get_C() {
   const iterNum = _.range(32).map(() => _.range(BLOCK_SIZE));
+
+  const iterC = await loadIterC();
 
   for (let i = 0; i < 32; i++) {
     for (let j = 0; j < BLOCK_SIZE; j++) iterNum[i][j] = 0;
@@ -129,6 +123,7 @@ function GOST_Kuz_Get_C() {
   for (let i = 0; i < 32; i++) {
     iterC[i] = GOST_Kuz_L(iterNum[i]);
   }
+  return uploadIterC(iterC);
 }
 
 // Одна итерация развертывания ключа (раундового), функция, выполняющая преобразования ячейки Фейстеля
@@ -149,14 +144,18 @@ export function GOST_Kuz_F(inKey1, inKey2, iterConst) {
 }
 
 // Развертывание(генерация) ключей
-export function GOST_Kuz_Expand_Key(key1, key2) {
+export async function GOST_Kuz_Expand_Key(key1, key2) {
+  const iterKey = await loadIterKey();
+
   // Предыдущая пара ключей
   let iter12 = _.range(2);
   // Текущая пара ключей
   let iter34 = _.range(2);
 
   // Вычисляем итерационные константы
-  GOST_Kuz_Get_C();
+  await GOST_Kuz_Get_C();
+
+  const iterC = await loadIterC();
 
   // Первые 2 итерационных ключа равны паре мастер-ключа
   iterKey[0] = key1;
@@ -178,10 +177,12 @@ export function GOST_Kuz_Expand_Key(key1, key2) {
     iterKey[2 * i + 2] = iter12[0];
     iterKey[2 * i + 3] = iter12[1];
   }
+  uploadIterKey(iterKey);
 }
 
-export function GOST_Kuz_Encript(blk) {
+export async function GOST_Kuz_Encrypt(blk) {
   let outBlk = blk;
+  const iterKey = loadIterKey();
 
   for (let i = 0; i < 9; i++) {
     outBlk = GOST_Kuz_X(iterKey[i], outBlk);
@@ -189,10 +190,15 @@ export function GOST_Kuz_Encript(blk) {
     outBlk = GOST_Kuz_L(outBlk);
   }
   outBlk = GOST_Kuz_X(outBlk, iterKey[9]);
+
+  await uploadIterKey(iterKey);
+
   return outBlk;
 }
 
-export function GOST_Kuz_Decript(blk) {
+export async function GOST_Kuz_Decrypt(blk) {
+  const iterKey = loadIterKey();
+
   let outBlk = GOST_Kuz_X(blk, iterKey[9]);
 
   for (let i = 8; i >= 0; i--) {
@@ -200,6 +206,8 @@ export function GOST_Kuz_Decript(blk) {
     outBlk = GOST_Kuz_reverse_S(outBlk);
     outBlk = GOST_Kuz_X(iterKey[i], outBlk);
   }
+  await uploadIterKey(iterKey);
+
   return outBlk;
 }
 
