@@ -53,8 +53,8 @@ export const lVec = [
   1, 148, 32, 133, 16, 194, 192, 1, 251, 1, 192, 194, 16, 133, 32, 148,
 ];
 
-// // Итерационные константы С
-// export const iterC = new Array(32);
+// Итерационные константы С
+export const iterC = new Array(32);
 
-// // Итерационные (раундовые) ключи шифрования
-// export const iterKey = new Array(10);
+// Итерационные (раундовые) ключи шифрования
+export const iterKey = new Array(10);

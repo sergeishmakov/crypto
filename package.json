@@ -9,6 +9,7 @@
   },
   "scripts": {
     "encrypt": "node ./encrypt.js",
-    "decrypt": "node ./decrypt.js"
+    "decrypt": "node ./decrypt.js",
+    "start": "node ./index.js"
   }
 }

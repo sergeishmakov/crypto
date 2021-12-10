@@ -1,6 +1,13 @@
-import fs from "fs/promises";
+import fs from "fs";
 
-import { BLOCK_SIZE, lVec, Pi, reversePi } from "./constants.js";
+import {
+  BLOCK_SIZE,
+  iterC,
+  iterKey,
+  lVec,
+  Pi,
+  reversePi,
+} from "./constants.js";
 import _ from "lodash";
 
 // Сложение 2х двоичных векторов по модулю 2
@@ -111,11 +118,7 @@ export function GOST_Kuz_reverse_L(inData) {
 }
 
 // функция расчета констант
-async function GOST_Kuz_Get_C() {
-  const iterCBase = (await fs.readFile("iterC.txt", "binary")) ?? null;
-
-  const iterC = iterCBase ? JSON.parse(iterCBase) : new Array(32);
-
+function GOST_Kuz_Get_C() {
   const iterNum = _.range(32).map(() => _.range(BLOCK_SIZE));
 
   for (let i = 0; i < 32; i++) {
@@ -126,9 +129,6 @@ async function GOST_Kuz_Get_C() {
   for (let i = 0; i < 32; i++) {
     iterC[i] = GOST_Kuz_L(iterNum[i]);
   }
-
-  await fs.writeFile("iterC.txt", JSON.stringify(iterC));
-  return iterC;
 }
 
 // Одна итерация развертывания ключа (раундового), функция, выполняющая преобразования ячейки Фейстеля
@@ -149,18 +149,14 @@ export function GOST_Kuz_F(inKey1, inKey2, iterConst) {
 }
 
 // Развертывание(генерация) ключей
-export async function GOST_Kuz_Expand_Key(key1, key2) {
-  const iterKeyBase = (await fs.readFile("iterKey.txt", "binary")) ?? null;
-
-  const iterKey = iterKeyBase ? JSON.parse(iterKeyBase) : new Array(10);
-
+export function GOST_Kuz_Expand_Key(key1, key2) {
   // Предыдущая пара ключей
   let iter12 = _.range(2);
   // Текущая пара ключей
   let iter34 = _.range(2);
 
   // Вычисляем итерационные константы
-  const iterC = await GOST_Kuz_Get_C();
+  GOST_Kuz_Get_C();
 
   // Первые 2 итерационных ключа равны паре мастер-ключа
   iterKey[0] = key1;
@@ -182,13 +178,9 @@ export async function GOST_Kuz_Expand_Key(key1, key2) {
     iterKey[2 * i + 2] = iter12[0];
     iterKey[2 * i + 3] = iter12[1];
   }
-  await fs.writeFile("iterKey.json", JSON.stringify(iterKey));
 }
 
-export async function GOST_Kuz_Encript(blk) {
-  const iterKeyBase = (await fs.readFile("iterKey.txt", "binary")) ?? null;
-
-  const iterKey = iterKeyBase ? JSON.parse(iterKeyBase) : new Array(10);
+export function GOST_Kuz_Encript(blk) {
   let outBlk = blk;
 
   for (let i = 0; i < 9; i++) {
@@ -200,11 +192,7 @@ export async function GOST_Kuz_Encript(blk) {
   return outBlk;
 }
 
-export async function GOST_Kuz_Decript(blk) {
-  const iterKeyBase = (await fs.readFile("iterKey.txt", "binary")) ?? null;
-
-  const iterKey = iterKeyBase ? JSON.parse(iterKeyBase) : new Array(10);
-
+export function GOST_Kuz_Decript(blk) {
   let outBlk = GOST_Kuz_X(blk, iterKey[9]);
 
   for (let i = 8; i >= 0; i--) {
@@ -231,5 +219,5 @@ export function bytesToHex(bytes) {
     .map((l) => l.reverse())
     .reverse()
     .flat()
-    .join(null);
+    .join("");
 }
