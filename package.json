@@ -1,0 +1,14 @@
+{
+  "name": "crypto-1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "encrypt": "node ./encrypt.js",
+    "decrypt": "node ./decrypt.js"
+  }
+}
