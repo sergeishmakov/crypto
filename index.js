@@ -1,3 +1,4 @@
+import fs from "fs/promises";
 import {
   bytesToHex,
   GOST_Kuz_Decrypt,
@@ -5,7 +6,6 @@ import {
   GOST_Kuz_Expand_Key,
   hexToBytes,
 } from "./utils.js";
-import fs from "fs/promises";
 
 const key1 = [
   0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00, 0xff, 0xee, 0xdd, 0xcc, 0xbb,
